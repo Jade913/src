@@ -173,7 +173,7 @@ class RPAWindow(QMainWindow, Ui_mainwindow):
 
           # 从智联获得的数据在tablewidget中显示
           # pdata = get_from_zhilian()
-          temp_file_path, msg = download_resume(driver, self.fetch_table)
+          temp_file_path, msg = download_resume(driver, self.fetch_table, self.selected_campuses)
           driver.close()
           # import_pdata_to_table(pdata, self.fetch_table)
           # 输出最终的 Excel 文件

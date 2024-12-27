@@ -31,7 +31,7 @@ def countdown(t):
         sound()
 
 
-def download_resume(driver, table_widget):
+def download_resume(driver, table_widget, selected_campuses=None):
     msg = "开始处理简历信息及下载简历"
 
     url = "https://rd6.zhaopin.com/app/candidate?tab=pending&jobNumber=-1&jobTitle=%E4%B8%8D%E9%99%90"
@@ -129,8 +129,28 @@ def download_resume(driver, table_widget):
         EC.element_to_be_clickable((By.CLASS_NAME, 'job-selector')))
     job_selector.click()
 
-    print("请在十秒内输入校区")
-    countdown(10)
+    # 使用选中的校区列表自动处理
+    if selected_campuses:
+        for campus in selected_campuses:
+            try:
+                # 等待并点击搜索框
+                search_input = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, 'search-input')))
+                search_input.clear()
+                search_input.send_keys(campus)
+                
+                # 等待并点击搜索结果
+                search_result = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, f"//div[contains(text(), '{campus}')]")))
+                search_result.click()
+                
+                time.sleep(1)  # 短暂等待以确保选择生效
+            except Exception as e:
+                print(f"处理校区 {campus} 时出错: {e}")
+                continue
+    else:
+        # 如果没有选中的校区
+        print("未选择校区，从头处理！")
 
     # 5.31
     # 定位滚动容器
