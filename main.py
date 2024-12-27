@@ -45,10 +45,10 @@ class LoginWindow(QMainWindow, Ui_login_window):
         # 使用QSettings加载上次保存的账号和密码
         settings = QSettings('config.ini', QSettings.IniFormat)
         settings.beginGroup('LoginInfo')
-        username = settings.value('username', '')
-        password = decrypt_string(settings.value('password', ''))
-        server = settings.value('server', 'odoo14.kelote.com')
-        db = settings.value('db', 'klt_hr')
+        username = settings.value('username', '2943972591@qq.com')
+        password = decrypt_string(settings.value('password', 'kelote8855'))
+        server = settings.value('server', 'omo.kelote.com')
+        db = settings.value('db', 'klt_omo')
         remember = settings.value('remember', False, type=bool)
         settings.endGroup()
 
@@ -115,7 +115,7 @@ class RPAWindow(QMainWindow, Ui_mainwindow):
         
         # 创建一个widget作为容器
         campus_widget = QWidget(self)
-        campus_widget.setGeometry(15, 500, 600, 200)
+        campus_widget.setGeometry(15, 300, 600, 200)
         
         # 创建网格布局
         layout = QGridLayout(campus_widget)
