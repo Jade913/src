@@ -113,8 +113,13 @@ class RPAWindow(QMainWindow, Ui_mainwindow):
                    "潍坊", "淄博", "苏州", "天津", "青岛", "上海", "西安", 
                    "长沙", "长春", "合肥", "南京", "成都", "东莞", "河北"]
         
+        # 创建一个widget作为容器
+        campus_widget = QWidget(self)
+        campus_widget.setGeometry(15, 500, 600, 200)
+        
         # 创建网格布局
-        layout = QGridLayout()
+        layout = QGridLayout(campus_widget)
+        layout.setSpacing(10)  # 设置间距
         
         # 动态创建复选框并添加到布局
         for i, campus in enumerate(campuses):
@@ -122,13 +127,13 @@ class RPAWindow(QMainWindow, Ui_mainwindow):
             checkbox.stateChanged.connect(self.on_campus_selected)
             layout.addWidget(checkbox, i // 6, i % 6)  # 每行6个
             
-        # 设置布局到GroupBox
-        self.campus_group.setLayout(layout)
+        # 设置布局
+        campus_widget.setLayout(layout)
 
     def on_campus_selected(self):
         self.selected_campuses = [
             checkbox.text() 
-            for checkbox in self.campus_group.findChildren(QCheckBox) 
+            for checkbox in self.findChildren(QCheckBox) 
             if checkbox.isChecked()
         ]
 
