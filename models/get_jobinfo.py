@@ -80,13 +80,14 @@ def download_resume(driver, table_widget, selected_campuses=None):
     #   option.click()
     #   time.sleep(1)  # 等待页面加载
 
-    contact_selector = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.CLASS_NAME, 'contact-selector')))
-    contact_selector.click()
+    # 筛选联系方式
+    # contact_selector = WebDriverWait(driver, 10).until(
+    #     EC.element_to_be_clickable((By.CLASS_NAME, 'contact-selector')))
+    # contact_selector.click()
 
-    by_phone = driver.find_element(By.XPATH,
-                                   "//div[@class='km-popover__inner']//div[@class='km-select__dropdown']//div[@class='km-scrollbar']//div[@class='km-scrollbar__wrap']//div[@class='km-scrollbar__view']//div[@class='km-select__options']//a[@class='condition-selector__item km-option']//div[@class='km-option__label']//div[@title='有电话']")
-    by_phone.click()
+    # by_phone = driver.find_element(By.XPATH,
+    #                                "//div[@class='km-popover__inner']//div[@class='km-select__dropdown']//div[@class='km-scrollbar']//div[@class='km-scrollbar__wrap']//div[@class='km-scrollbar__view']//div[@class='km-select__options']//a[@class='condition-selector__item km-option']//div[@class='km-option__label']//div[@title='有电话']")
+    # by_phone.click()
 
     try:
         # 等待复选框元素出现
@@ -109,19 +110,12 @@ def download_resume(driver, table_widget, selected_campuses=None):
     tag_selector.click()
 
     untag_div = driver.find_element(By.XPATH,
-                                    "//div[@class='km-popover__inner']//div[@class='km-select__dropdown km-select__dropdown--multiple']//div[@class='km-scrollbar']//div[@class='km-scrollbar__wrap']//div[@class='km-scrollbar__view']//div[@class='km-select__options']//a[@class='condition-selector__item km-option km-option--multiple']//div[@class='km-option__label']//div[@title='未加标签的']")
+                                    "//a[@class='candidate-filter-selector__item km-option km-option--multiple']//div[@class='candidate-filter-selector__item-label'][@title='未加标签的']")
     untag_div.click()
 
-    # 确定框的父级
-    popovers = driver.find_elements(By.XPATH,
-                                    "//div[contains(@class, 'km-popover') and contains(@class, 'km-select__dropdown-wrapper') and contains(@class, 'condition-selector-popper')]")
-
-    # 根据实际情况调整索引
-    target_popover = popovers[1]
-
-    # 在选中的popover中查找确定按钮
-    confirm_button = target_popover.find_element(By.XPATH,
-                                                 ".//div[@class='km-select__dropdown-footer']//button[@class='km-button km-control km-ripple-off km-button--primary km-button--filled is-mini']")
+    confirm_button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH,
+                                    "//div[@class='candidate-filter-selector__footer']//button[@class='km-button km-control km-ripple-off km-button--primary km-button--filled is-mini']")))
     confirm_button.click()
 
     # 点击 job-selector 以显示选项
@@ -130,27 +124,27 @@ def download_resume(driver, table_widget, selected_campuses=None):
     job_selector.click()
 
     # 使用选中的校区列表自动处理
-    if selected_campuses:
-        for campus in selected_campuses:
-            try:
-                # 等待并点击搜索框
-                search_input = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, 'search-input')))
-                search_input.clear()
-                search_input.send_keys(campus)
-                
-                # 等待并点击搜索结果
-                search_result = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, f"//div[contains(text(), '{campus}')]")))
-                search_result.click()
-                
-                time.sleep(1)  # 短暂等待以确保选择生效
-            except Exception as e:
-                print(f"处理校区 {campus} 时出错: {e}")
-                continue
-    else:
-        # 如果没有选中的校区
-        print("未选择校区，从头处理！")
+    # if selected_campuses:
+    #     for campus in selected_campuses:
+    #         try:
+    #             # 等待并点击搜索框
+    #             search_input = WebDriverWait(driver, 10).until(
+    #                 EC.presence_of_element_located((By.CLASS_NAME, 'search-input')))
+    #             search_input.clear()
+    #             search_input.send_keys(campus)
+    #
+    #             # 等待并点击搜索结果
+    #             search_result = WebDriverWait(driver, 10).until(
+    #                 EC.element_to_be_clickable((By.XPATH, f"//div[contains(text(), '{campus}')]")))
+    #             search_result.click()
+    #
+    #             time.sleep(1)  # 短暂等待以确保选择生效
+    #         except Exception as e:
+    #             print(f"处理校区 {campus} 时出错: {e}")
+    #             continue
+    # else:
+    #     # 如果没有选中的校区
+    #     print("未选择校区，从头处理！")
 
     # 5.31
     # 定位滚动容器
@@ -202,8 +196,8 @@ def download_resume(driver, table_widget, selected_campuses=None):
     # 初始化当前索引变量
     current_index = 0
 
-    print("请在10秒内选择起始岗位")
-    countdown(10)
+    # print("请在10秒内选择起始岗位")
+    # countdown(10)
     # 获取所有选项元素
     # km_select_options = driver.find_elements(By.XPATH,
     #                                          "//div[@class='km-popover__inner']//div[@class='km-select__dropdown']//div[@class='km-scrollbar']//div[@class='km-scrollbar__wrap']//div[@class='km-scrollbar__view']//div[@class='km-select__options']")
@@ -212,6 +206,17 @@ def download_resume(driver, table_widget, selected_campuses=None):
 
     # 尝试获取手动选中的选项
     try:
+        if selected_campuses:
+            for campus in selected_campuses:
+                msg += f"\n开始处理校区：{campus}"
+                # 在职位名称/发布地输入框中输入校区名称
+                search_input = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH,
+                                                    "//div[contains(@class, 'km-select__search-input')]//input[@class='km-input__original is-normal']")))
+                search_input.clear()
+                search_input.send_keys(campus)
+                time.sleep(1)  # 等待搜索结果
+
 
         #
         current_selected_option = driver.find_element(By.XPATH,

@@ -156,23 +156,24 @@ class RPAWindow(QMainWindow, Ui_mainwindow):
 
         driver = get_driver()
 
-        try:
-
-          # 处理打招呼
-          # msg = say_hi(driver)
-          # self.logger.info(msg)
-
-          # 处理可以聊
-          msg = deal_new_greet(driver)
-          self.logger.info(msg)
-
-        except:
-          msg += "处理新招呼失败"
+        # try:
+        #
+        #   # 处理打招呼
+        #   # msg = say_hi(driver)
+        #   # self.logger.info(msg)
+        #
+        #   # 处理可以聊
+        #   msg = deal_new_greet(driver)
+        #   self.logger.info(msg)
+        #
+        # except:
+        #   msg += "处理新招呼失败"
 
         try:
 
           # 从智联获得的数据在tablewidget中显示
           # pdata = get_from_zhilian()
+          print(self.selected_campuses)
           temp_file_path, msg = download_resume(driver, self.fetch_table, self.selected_campuses)
           driver.close()
           # import_pdata_to_table(pdata, self.fetch_table)
