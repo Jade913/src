@@ -200,7 +200,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
 
     # 用户选中的校区列表依次输入进输入框，然后滚动岗位列表，获取岗位列表，然后处理岗位列表的每个岗位下的简历
     try:
-        resume_info_list = []  # 移到这里
+        resume_info_list = [] 
         if selected_campuses:
             for campus in selected_campuses:
                 msg += f"\n开始处理校区：{campus}"
@@ -241,10 +241,10 @@ def download_resume(driver, table_widget, selected_campuses=None):
                     job_options = driver.find_elements(By.XPATH, 
                         "//a[@class='job-selector__item km-option']")
                     
-                    print(f"\n获取到{campus}的岗位列表，开始处理各个岗位...")
+                    print(f"\n获取到{campus}的岗位列表，共{len(job_options)}个岗位，开始处理各个岗位...")
 
                     # 遍历处理每个岗位
-                    for option in job_options:
+                    for index, option in enumerate(job_options, 1):
                         try:
                             # 获取岗位标题
                             title_element = option.find_element(By.CSS_SELECTOR, ".job-selector__item-title")
@@ -252,12 +252,13 @@ def download_resume(driver, table_widget, selected_campuses=None):
                             
                             # 跳过"不限"选项
                             if job_title == '不限':
+                                print(f"跳过'不限'选项")
                                 continue
                             
                             # 检查是否已下线
                             try:
                                 option.find_element(By.CLASS_NAME, "job-selector__item-tag")
-                                print(f"跳过已下线岗位: {job_title}")
+                                print(f"跳过已下线岗位 [{index}/{len(job_options)}]: {job_title}")
                                 continue
                             except:
                                 pass
@@ -267,9 +268,10 @@ def download_resume(driver, table_widget, selected_campuses=None):
                             job_location = city_element.text.strip()
                             
                             if campus not in job_location:
-                                continue  # 跳过不属于当前校区的岗位
+                                print(f"跳过不匹配校区的岗位 [{index}/{len(job_options)}]: {job_title} - {job_location}")
+                                continue
                             
-                            print(f"\n处理岗位: {job_title}, 地点: {job_location}")
+                            print(f"\n正在处理岗位 [{index}/{len(job_options)}]: {job_title}, 地点: {job_location}")
                             msg += f"\n当前职位：{job_title}，职位地点：{job_location}"
                             
                             # 点击选择该岗位
@@ -411,10 +413,10 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                         break
 
                         except Exception as e:
-                            print(f"处理岗位时出错: {e}")
+                            print(f"处理岗位时出错 [{index}/{len(job_options)}]: {str(e)}")
                             continue
                     
-                    print(f"\n========== {campus}校区所有岗位处理完成 ==========\n")
+                    print(f"\n========== {campus}校区所有岗位处理完成，共处理{len(job_options)}个岗位 ==========\n")
                     df_temp = pd.DataFrame(resume_info_list)
                     df_temp.to_excel(f"temp_{campus}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx", index=False)
                     
