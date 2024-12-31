@@ -222,27 +222,60 @@ def download_resume(driver, table_widget, selected_campuses=None):
                 search_input.send_keys(campus)
                 time.sleep(0.5)  
 
-                # 定位并滚动容器
+                # 等待岗位列表加载完成
                 try:
+                    print(f"\n开始获取{campus}的岗位列表...")
+                    
+                    # 等待选项容器加载
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, "km-select__options")))
+                    
+                    # 等待并滚动以加载更多岗位
                     scroll_container = WebDriverWait(driver, 5).until(
                         EC.presence_of_element_located((By.XPATH,
                             "//div[@class='km-popover km-select__dropdown-wrapper job-selector-popper']//div[@class='km-scrollbar__wrap']")))
                     
                     # 移动到容器并滚动
                     ActionChains(driver).move_to_element(scroll_container).perform()
-                    print(f"开始滚动获取{campus}的岗位列表...")
+                    print(f"开始滚动加载更多岗位...")
                     
-                    # 向下滚动10次
+                    # 记录上一次获取到的岗位数量
+                    last_count = 0
+                    
+                    # 持续滚动直到没有新的岗位加载
                     for i in range(10):
+                        # 获取当前岗位列表
+                        job_options = driver.find_elements(By.XPATH, 
+                            "//a[@class='job-selector__item km-option']")
+                        current_count = len(job_options)
+                        
+                        print(f"第{i+1}次滚动，当前获取到{current_count}个岗位")
+                        
+                        # 打印当前获取到的所有岗位
+                        print("\n当前获取到的岗位列表：")
+                        for idx, opt in enumerate(job_options, 1):
+                            try:
+                                title = opt.find_element(By.CSS_SELECTOR, ".job-selector__item-title").get_attribute('title')
+                                city = opt.find_element(By.CLASS_NAME, "job-selector__item-city").text.strip()
+                                is_offline = "已下线" if len(opt.find_elements(By.CLASS_NAME, "job-selector__item-tag")) > 0 else "在线"
+                                print(f"[{idx}] {title} - {city} ({is_offline})")
+                            except Exception as e:
+                                print(f"[{idx}] 获取岗位信息失败: {str(e)}")
+                        
+                        # 如果岗位数量没有增加，等待一下再检查一次
+                        if current_count == last_count:
+                            time.sleep(1)
+                            continue
+                        
+                        # 更新上一次的数量
+                        last_count = current_count
+                        
+                        # 继续滚动
                         driver.execute_script("arguments[0].scrollTop = arguments[0].scrollTop + 100;", scroll_container)
-                        time.sleep(0.5)
+                        time.sleep(1)  # 等待新的岗位加载
                     
-                    # 获取该校区所有岗位
-                    job_options = driver.find_elements(By.XPATH, 
-                        "//a[@class='job-selector__item km-option']")
+                    print(f"\n最终获取到{len(job_options)}个岗位，开始处理...")
                     
-                    print(f"\n获取到{campus}的岗位列表，共{len(job_options)}个岗位，开始处理各个岗位...")
-
                     # 遍历处理每个岗位
                     for index, option in enumerate(job_options, 1):
                         try:
@@ -421,7 +454,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
                     df_temp.to_excel(f"temp_{campus}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx", index=False)
                     
                 except Exception as e:
-                    print(f"处理{campus}校区时出错: {e}")
+                    print(f"获取岗位列表时出错: {e}")
                     continue
             
 
