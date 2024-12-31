@@ -13,6 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.keys import Keys
 
 from src.utils.selenium_tools import get_course
 from src.utils.tabledata import import_single_resume_to_table, append_row_to_excel, generate_filename, init_excel_file
@@ -213,9 +214,18 @@ def download_resume(driver, table_widget, selected_campuses=None):
                 search_input = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.XPATH,
                                                     "//div[contains(@class, 'km-select__search-input')]//input[@class='km-input__original is-normal']")))
-                search_input.clear()
+                # 清除输入框中的内容
+                search_input.send_keys(Keys.CONTROL + "a")
+                search_input.send_keys(Keys.DELETE)
+                time.sleep(0.2)
+
+                if search_input.get_attribute('value'):
+                    search_input.send_keys(Keys.CONTROL + "a", Keys.BACKSPACE)
+                    time.sleep(0.2)
+
+                # 输入新的校区
                 search_input.send_keys(campus)
-                time.sleep(1)  # 等待搜索结果
+                time.sleep(0.5)  # 等待搜索结果
 
 
         #
@@ -268,19 +278,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
             job_location = city_element.get_attribute('title')
             print(f"当前职位: {job_title}, 职位地点: {job_location}")
             msg += f"\n当前职位：{job_title}，职位地点：{job_location}"
-            # 构造XPath表达式，包含所有指定的层级以及job_title和city的条件
-            # xpath = f"""
-            # //div[@class='km-popover__inner']
-            #   //div[@class='km-select__dropdown']
-            #   //div[@class='km-scrollbar']
-            #   //div[@class='km-scrollbar__wrap']
-            #   //div[@class='km-scrollbar__view']
-            #   //a[@class='job-selector__item km-option']
-            #     [div[@class='job-selector__item-job']
-            #       [span[@title='{job_title}']]
-            #       [{f".//div[@class='job-selector__item-city' and @title='{job_location}']" if job_location else ''}]
-            #     ]
-            # """
+            
 
             try:
                 # current_option = WebDriverWait(driver, 3).until(
