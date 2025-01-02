@@ -266,5 +266,6 @@ class KltRpaApp(QApplication):
 
 if __name__ == '__main__':
     app = KltRpaApp()
-    sys.exit(app.exec_())
+    rpa = app.exec_()
+    # sys.exit(rpa)
 

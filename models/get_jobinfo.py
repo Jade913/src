@@ -83,13 +83,14 @@ def download_resume(driver, table_widget, selected_campuses=None):
     #   time.sleep(1)  # 等待页面加载
 
     # 筛选联系方式
-    # contact_selector = WebDriverWait(driver, 10).until(
-    #     EC.element_to_be_clickable((By.CLASS_NAME, 'contact-selector')))
-    # contact_selector.click()
+    contact_selector = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.CLASS_NAME, 'contact-selector')))
+    contact_selector.click()
 
-    # by_phone = driver.find_element(By.XPATH,
-    #                                "//div[@class='km-popover__inner']//div[@class='km-select__dropdown']//div[@class='km-scrollbar']//div[@class='km-scrollbar__wrap']//div[@class='km-scrollbar__view']//div[@class='km-select__options']//a[@class='condition-selector__item km-option']//div[@class='km-option__label']//div[@title='有电话']")
-    # by_phone.click()
+    by_phone = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH,
+                                    "//div[@title='有电话' and contains(@class, 'candidate-filter-selector__item-label')]")))
+    by_phone.click()
 
     try:
         # 等待复选框元素出现
@@ -238,7 +239,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
 
                     # 获取该校区所有岗位
                     job_options = driver.find_elements(By.CSS_SELECTOR, 
-                        ".km-select__options > a.job-selector__item")
+                        ".km-select__options > a.job-selector__item:not(:empty)")
 
                     # 打印当前获取到的所有岗位
                     print("\n当前获取到的岗位列表：")
@@ -266,12 +267,12 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                 continue
                             
                             # 检查是否已下线
-                            try:
-                                option.find_element(By.CLASS_NAME, "job-selector__item-tag")
-                                print(f"跳过已下线岗位 [{index}/{len(job_options)}]: {job_title}")
-                                continue
-                            except:
-                                pass
+                            # try:
+                            #     option.find_element(By.CLASS_NAME, "job-selector__item-tag")
+                            #     print(f"跳过已下线岗位 [{index}/{len(job_options)}]: {job_title}")
+                            #     continue
+                            # except:
+                            #     pass
                             
                             # 获取城市信息并验证是否匹配当前校区
                             city_element = option.find_element(By.CLASS_NAME, "job-selector__item-city")
@@ -308,12 +309,41 @@ def download_resume(driver, table_widget, selected_campuses=None):
 
                                 try:
                                     # 检查邮箱是否存在
+                                    # try:
+                                    #     email_element = WebDriverWait(driver, 5).until(
+                                    #         EC.presence_of_element_located((By.CSS_SELECTOR, '.resume-basic-new__email .is-ml-4')))
+                                    #     email_exist = True
+                                    # except:
+                                    #     email_exist = False
+
+                                    # 筛选年龄23-39岁
+
+                                    # 检查电话
                                     try:
-                                        email_element = WebDriverWait(driver, 5).until(
-                                            EC.presence_of_element_located((By.CSS_SELECTOR, '.resume-basic-new__email .is-ml-4')))
-                                        email_exist = True
-                                    except:
-                                        email_exist = False
+                                        view_detail_btn = WebDriverWait(driver, 10).until(
+                                            EC.element_to_be_clickable((By.XPATH,
+                                                                        "//button[.//div[contains(text(), '查看详情')]]")))
+
+                                        view_detail_btn.click()
+
+                                        # 等待并点击【确定查看】按钮
+                                        confirm_btn = WebDriverWait(driver, 10).until(
+                                            EC.element_to_be_clickable((By.XPATH,
+                                                                        "//div[contains(@class, 'get-phone-popover__content--btn')][contains(text(), '确定查看')]")))
+                                        confirm_btn.click()
+
+                                        # 等待电话号码显示并获取
+                                        phone_element = WebDriverWait(driver, 10).until(
+                                            EC.presence_of_element_located((By.XPATH,
+                                                                            "//div[contains(@class, 'resume-basic-new__contacts--phone')]//div[last()]")))
+                                        phone_number = phone_element.text.strip()
+
+                                        print(f"获取到电话号码: {phone_number}")
+                                        phone_exist = True
+
+                                    except Exception as e:
+                                        print(f"获取电话号码失败: {e}")
+                                        phone_exist = False
 
                                     # 检查是否统招
                                     try:
@@ -410,6 +440,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                     i += 1
 
                                 except Exception as e:
+                                    # 不符合年龄23-39岁 跳过
                                     msg += f"\n-----=={name if 'name' in locals() else '未知'}没有邮箱信息，跳过处理{str(e)[:50]}==-----"
 
                                 finally:
