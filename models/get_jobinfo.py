@@ -366,7 +366,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                             EC.presence_of_element_located((By.XPATH,
                                                                             "//div[contains(@class, 'resume-basic-new__contacts--phone')]//div[last()]")))
                                         phone_number = phone_element.text.strip()
-
+                                        phone_number = ''.join(phone_number.split())
                                         print(f"获取到电话号码: {phone_number}")
                                         phone_exist = True
 
@@ -410,14 +410,14 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                     if phone_exist and is_rec:
                                         # 提取简历信息
                                         name = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__name').text
-                                        age = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(1)').text.split('岁')[0].strip()
+                                        # age = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(1)').text.split('岁')[0].strip()
                                         work_years = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(2)').text.strip()
                                         education = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(3)').text.strip()
                                         status = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(4)').text.strip()
                                         email = email_element.text
 
                                         # 处理数据
-                                        mobile = re.sub(r'[^\w\s]', '', email)
+                                        mobile = phone_number
                                         work_years_match = re.search(r'\d+', work_years)
                                         work_years = int(work_years_match.group()) if work_years_match else 0
                                         regit_course = get_course(job_title)
@@ -426,7 +426,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                         resume_info = {
                                             "序号": i + 1,
                                             "意向课程": regit_course,
-                                            "手机": mobile,
+                                            "手机": phone_number,
                                             "校区": job_location,
                                             "姓名": name,
                                             "性别": "",
