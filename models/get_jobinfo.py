@@ -308,16 +308,45 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                 clicked_save = False
 
                                 try:
-                                    # 检查邮箱是否存在
-                                    # try:
-                                    #     email_element = WebDriverWait(driver, 5).until(
-                                    #         EC.presence_of_element_located((By.CSS_SELECTOR, '.resume-basic-new__email .is-ml-4')))
-                                    #     email_exist = True
-                                    # except:
-                                    #     email_exist = False
-
                                     # 筛选年龄23-39岁
-
+                                    try:
+                                        # 获取年龄信息
+                                        age_element = WebDriverWait(driver, 5).until(
+                                            EC.presence_of_element_located((By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(1)')))
+                                        age_text = age_element.text.strip()
+                                        
+                                        # 提取年龄数字
+                                        age_match = re.search(r'(\d+)岁', age_text)
+                                        if age_match:
+                                            age = int(age_match.group(1))
+                                            print(f"应聘者年龄: {age}岁")
+                                            
+                                            # 检查年龄是否在23-39岁范围内
+                                            if age < 23 or age > 39:
+                                                print(f"年龄{age}岁不在23-39岁范围内，跳过处理")
+                                                msg += f"\n-----==年龄不符合要求（23-39岁），跳过处理==-----"
+                                                # 点击下一份简历
+                                                right_icon = WebDriverWait(driver, 2).until(
+                                                    EC.visibility_of_element_located((By.CLASS_NAME, "new-shortcut-resume__right")))
+                                                right_icon.click()
+                                                continue
+                                                
+                                        else:
+                                            print("无法获取年龄信息，跳过处理")
+                                            continue
+                                            
+                                    except Exception as e:
+                                        print(f"处理年龄信息时出错: {e}")
+                                        continue
+                                    
+                                    # 检查邮箱是否存在
+                                    try:
+                                        email_element = WebDriverWait(driver, 5).until(
+                                            EC.presence_of_element_located((By.CSS_SELECTOR, '.resume-basic-new__email .is-ml-4')))
+                                        email_exist = True
+                                    except:
+                                        email_exist = False
+                                        
                                     # 检查电话
                                     try:
                                         view_detail_btn = WebDriverWait(driver, 10).until(
@@ -378,7 +407,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                             print(f"关闭简历时出错: {e}")
                                         break
 
-                                    if email_exist and is_rec:
+                                    if phone_exist and is_rec:
                                         # 提取简历信息
                                         name = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__name').text
                                         age = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(1)').text.split('岁')[0].strip()
@@ -440,8 +469,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                     i += 1
 
                                 except Exception as e:
-                                    # 不符合年龄23-39岁 跳过
-                                    msg += f"\n-----=={name if 'name' in locals() else '未知'}没有邮箱信息，跳过处理{str(e)[:50]}==-----"
+                                    print(f"处理简历时出错: {e}")
 
                                 finally:
                                     # 点击下一份简历
