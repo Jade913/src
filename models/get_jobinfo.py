@@ -57,7 +57,7 @@ def click_next_resume(driver, msg, reason=""):
 
 def check_resume_conditions(driver, job_title):
     """
-    检查简历是否满足所有条件
+    检查简历是否满足年龄、统招和工作经历要求
     :return: tuple(bool, str) (是否满足所有条件, 不满足的原因)
     """
     try:
@@ -72,25 +72,7 @@ def check_resume_conditions(driver, job_title):
         if age < 23 or age > 39:
             return False, f"年龄{age}岁不在23-39岁范围内"
 
-        # 2.检查电话
-        try:
-            view_detail_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[.//div[contains(text(), '查看详情')]]")))
-            view_detail_btn.click()
-
-            confirm_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, 
-                    "//div[contains(@class, 'get-phone-popover__content--btn')][contains(text(), '确定查看')]")))
-            confirm_btn.click()
-
-            phone_element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH,
-                    "//div[contains(@class, 'resume-basic-new__contacts--phone')]//div[last()]")))
-            phone_number = ''.join(phone_element.text.strip().split())
-        except:
-            return False, "无法获取电话号码"
-
-        # 3.检查是否统招
+        # 2.检查是否统招
         try:
             education_section = WebDriverWait(driver, 2).until(
                 EC.presence_of_element_located((By.CLASS_NAME, 'resume-section-education-experiences')))
@@ -110,7 +92,7 @@ def check_resume_conditions(driver, job_title):
         except:
             return False, "判断统招状态失败"
 
-        # 4.检查工作经历
+        # 3.检查工作经历
         try:
             job_titles = driver.find_elements(By.CSS_SELECTOR, ".new-work-experiences__work-job-title")
             titles = [el.get_attribute('title') for el in job_titles]
@@ -128,7 +110,7 @@ def check_resume_conditions(driver, job_title):
         except:
             return False, "获取工作经历失败"
 
-        return True, phone_number
+        return True, ""
 
     except Exception as e:
         return False, f"检查条件时出错: {str(e)}"
@@ -409,17 +391,40 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                 clicked_save = False
 
                                 try:
-                                    # 检查所有条件
-                                    conditions_met, result = check_resume_conditions(driver, job_title)
-                                    
+                                    # 先检查基本条件（年龄、统招、工作经历）
+                                    conditions_met, reason = check_resume_conditions(driver, job_title)
                                     if not conditions_met:
-                                        if not click_next_resume(driver, msg, result):
+                                        if not click_next_resume(driver, msg, reason):
                                             break
                                         continue
+
+                                    # 检查电话号码
+                                    try:
+                                        view_detail_btn = WebDriverWait(driver, 10).until(
+                                            EC.element_to_be_clickable((By.XPATH, "//button[.//div[contains(text(), '查看详情')]]")))
+                                        view_detail_btn.click()
+
+                                        confirm_btn = WebDriverWait(driver, 10).until(
+                                            EC.element_to_be_clickable((By.XPATH, 
+                                                "//div[contains(@class, 'get-phone-popover__content--btn')][contains(text(), '确定查看')]")))
+                                        confirm_btn.click()
+
+                                        phone_element = WebDriverWait(driver, 10).until(
+                                            EC.presence_of_element_located((By.XPATH,
+                                                "//div[contains(@class, 'resume-basic-new__contacts--phone')]//div[last()]")))
+                                        phone_number = ''.join(phone_element.text.strip().split())
                                         
-                                    # 获取电话号码（从result中获取）
-                                    phone_number = result
-                                    
+                                        if not phone_number:
+                                            if not click_next_resume(driver, msg, "电话号码为空"):
+                                                break
+                                            continue
+                                            
+                                    except Exception as e:
+                                        print(f"获取电话号码失败: {e}")
+                                        if not click_next_resume(driver, msg, "无法获取电话号码"):
+                                            break
+                                        continue
+
                                     # 获取简历编号
                                     resume_url = driver.current_url
                                     resume_number = re.search(r'resumeNumber=([^&]+)', resume_url).group(1)
