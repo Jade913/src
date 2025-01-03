@@ -45,7 +45,7 @@ def click_next_resume(driver, msg, reason=""):
         if reason:
             print(f"{reason}，跳过处理")
             msg += f"\n-----=={reason}，跳过处理==-----"
-            
+
         right_icon = WebDriverWait(driver, 2).until(
             EC.visibility_of_element_located((By.CLASS_NAME, "new-shortcut-resume__right")))
         right_icon.click()
@@ -96,15 +96,15 @@ def check_resume_conditions(driver, job_title):
         try:
             job_titles = driver.find_elements(By.CSS_SELECTOR, ".new-work-experiences__work-job-title")
             titles = [el.get_attribute('title') for el in job_titles]
-            
+
             descriptions = driver.find_elements(By.CSS_SELECTOR, ".new-work-experiences__desc .is-pre-text")
             descs = [el.text for el in descriptions]
-            
+
             skill_tags = driver.find_elements(By.CSS_SELECTOR, ".new-resume-detail-skill-tag span")
             skills = [el.text for el in skill_tags]
-            
+
             work_experience_text = ' '.join(titles + descs + skills)
-            
+
             if not check_work_experience(job_title, work_experience_text):
                 return False, "工作经历不符合要求"
         except:
@@ -284,15 +284,15 @@ def download_resume(driver, table_widget, selected_campuses=None):
 
     # 用户选中的校区列表依次输入进输入框，然后滚动岗位列表，获取岗位列表，然后处理岗位列表的每个岗位下的简历
     try:
-        resume_info_list = [] 
+        resume_info_list = []
         if selected_campuses:
             for campus in selected_campuses:
                 msg += f"\n开始处理校区：{campus}"
                 # 在职位名称/发布地输入框中输入校区名称
                 search_input = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.XPATH,
-                        "//div[contains(@class, 'km-select__search-input')]//input[@class='km-input__original is-normal']")))
-                
+                                                    "//div[contains(@class, 'km-select__search-input')]//input[@class='km-input__original is-normal']")))
+
                 # 清除输入框中的内容
                 search_input.send_keys(Keys.CONTROL + "a")
                 search_input.send_keys(Keys.DELETE)
@@ -304,33 +304,35 @@ def download_resume(driver, table_widget, selected_campuses=None):
 
                 # 输入新的校区
                 search_input.send_keys(campus)
-                time.sleep(0.5)  
+                time.sleep(0.5)
 
                 # 定位并滚动容器
                 try:
                     scroll_container = WebDriverWait(driver, 5).until(
                         EC.presence_of_element_located((By.XPATH,
-                            "//div[@class='km-popover km-select__dropdown-wrapper job-selector-popper']//div[@class='km-scrollbar__wrap']")))
-                    
+                                                        "//div[@class='km-popover km-select__dropdown-wrapper job-selector-popper']//div[@class='km-scrollbar__wrap']")))
+
                     # 移动到容器并滚动
                     ActionChains(driver).move_to_element(scroll_container).perform()
                     print(f"开始滚动获取{campus}的岗位列表...")
-                    
+
                     # 等待选项容器加载
                     WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CLASS_NAME, "km-select__options")))
 
                     # 获取该校区所有岗位
-                    job_options = driver.find_elements(By.CSS_SELECTOR, 
-                        ".km-select__options > a.job-selector__item:not(:empty)")
+                    job_options = driver.find_elements(By.CSS_SELECTOR,
+                                                       ".km-select__options > a.job-selector__item:not(:empty)")
 
                     # 打印当前获取到的所有岗位
                     print("\n当前获取到的岗位列表：")
                     for idx, opt in enumerate(job_options, 1):
                         try:
-                            title = opt.find_element(By.CSS_SELECTOR, ".job-selector__item-title").get_attribute('title')
+                            title = opt.find_element(By.CSS_SELECTOR, ".job-selector__item-title").get_attribute(
+                                'title')
                             city = opt.find_element(By.CLASS_NAME, "job-selector__item-city").text.strip()
-                            is_offline = "已下线" if len(opt.find_elements(By.CLASS_NAME, "job-selector__item-tag")) > 0 else "在线"
+                            is_offline = "已下线" if len(
+                                opt.find_elements(By.CLASS_NAME, "job-selector__item-tag")) > 0 else "在线"
                             print(f"[{idx}] {title} - {city} ({is_offline})")
                         except Exception as e:
                             print(f"[{idx}] 获取岗位信息失败: {str(e)}")
@@ -343,12 +345,12 @@ def download_resume(driver, table_widget, selected_campuses=None):
                             # 获取岗位标题
                             title_element = option.find_element(By.CSS_SELECTOR, ".job-selector__item-title")
                             job_title = title_element.get_attribute('title')
-                            
+
                             # 跳过"不限"选项
                             if job_title == '不限':
                                 print(f"跳过'不限'选项")
                                 continue
-                            
+
                             # 检查是否已下线
                             # try:
                             #     option.find_element(By.CLASS_NAME, "job-selector__item-tag")
@@ -356,18 +358,19 @@ def download_resume(driver, table_widget, selected_campuses=None):
                             #     continue
                             # except:
                             #     pass
-                            
+
                             # 获取城市信息并验证是否匹配当前校区
                             city_element = option.find_element(By.CLASS_NAME, "job-selector__item-city")
                             job_location = city_element.text.strip()
-                            
+
                             if campus not in job_location:
-                                print(f"跳过不匹配校区的岗位 [{index}/{len(job_options)}]: {job_title} - {job_location}")
+                                print(
+                                    f"跳过不匹配校区的岗位 [{index}/{len(job_options)}]: {job_title} - {job_location}")
                                 continue
-                            
+
                             print(f"\n正在处理岗位 [{index}/{len(job_options)}]: {job_title}, 地点: {job_location}")
                             msg += f"\n当前职位：{job_title}，职位地点：{job_location}"
-                            
+
                             # 点击选择该岗位
                             option.click()
                             time.sleep(1)  # 等待点击生效
@@ -401,24 +404,25 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                     # 检查电话号码
                                     try:
                                         view_detail_btn = WebDriverWait(driver, 10).until(
-                                            EC.element_to_be_clickable((By.XPATH, "//button[.//div[contains(text(), '查看详情')]]")))
+                                            EC.element_to_be_clickable(
+                                                (By.XPATH, "//button[.//div[contains(text(), '查看详情')]]")))
                                         view_detail_btn.click()
 
                                         confirm_btn = WebDriverWait(driver, 10).until(
-                                            EC.element_to_be_clickable((By.XPATH, 
-                                                "//div[contains(@class, 'get-phone-popover__content--btn')][contains(text(), '确定查看')]")))
+                                            EC.element_to_be_clickable((By.XPATH,
+                                                                        "//div[contains(@class, 'get-phone-popover__content--btn')][contains(text(), '确定查看')]")))
                                         confirm_btn.click()
 
                                         phone_element = WebDriverWait(driver, 10).until(
                                             EC.presence_of_element_located((By.XPATH,
-                                                "//div[contains(@class, 'resume-basic-new__contacts--phone')]//div[last()]")))
+                                                                            "//div[contains(@class, 'resume-basic-new__contacts--phone')]//div[last()]")))
                                         phone_number = ''.join(phone_element.text.strip().split())
-                                        
+
                                         if not phone_number:
                                             if not click_next_resume(driver, msg, "电话号码为空"):
                                                 break
                                             continue
-                                            
+
                                     except Exception as e:
                                         print(f"获取电话号码失败: {e}")
                                         if not click_next_resume(driver, msg, "无法获取电话号码"):
@@ -428,12 +432,13 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                     # 获取简历编号
                                     resume_url = driver.current_url
                                     resume_number = re.search(r'resumeNumber=([^&]+)', resume_url).group(1)
-                                    
+
                                     if resume_number == old_resume_number:
                                         msg += f"\n当前简历已经是最后一份，跳过处理。"
                                         try:
                                             close_button = WebDriverWait(driver, 10).until(
-                                                EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'new-shortcut-resume__close')]")))
+                                                EC.element_to_be_clickable((By.XPATH,
+                                                                            "//div[contains(@class, 'new-shortcut-resume__close')]")))
                                             close_button.click()
                                         except Exception as e:
                                             print(f"关闭简历时出错: {e}")
@@ -441,10 +446,14 @@ def download_resume(driver, table_widget, selected_campuses=None):
 
                                     # 提取简历信息
                                     name = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__name').text
-                                    work_years = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(2)').text.strip()
-                                    education = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(3)').text.strip()
-                                    status = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__meta-item:nth-child(4)').text.strip()
-                                    email = driver.find_element(By.CSS_SELECTOR, '.resume-basic-new__email .is-ml-4').text
+                                    work_years = driver.find_element(By.CSS_SELECTOR,
+                                                                     '.resume-basic-new__meta-item:nth-child(2)').text.strip()
+                                    education = driver.find_element(By.CSS_SELECTOR,
+                                                                    '.resume-basic-new__meta-item:nth-child(3)').text.strip()
+                                    status = driver.find_element(By.CSS_SELECTOR,
+                                                                 '.resume-basic-new__meta-item:nth-child(4)').text.strip()
+                                    email = driver.find_element(By.CSS_SELECTOR,
+                                                                '.resume-basic-new__email .is-ml-4').text
 
                                     # 处理数据
                                     work_years_match = re.search(r'\d+', work_years)
@@ -476,27 +485,31 @@ def download_resume(driver, table_widget, selected_campuses=None):
 
                                     # 下载简历
                                     if not clicked_save:
-                                        save_to_local_button = driver.find_element(By.XPATH, "//div[@class='resume-button position-r']")
+                                        save_to_local_button = driver.find_element(By.XPATH,
+                                                                                   "//div[@class='resume-button position-r']")
                                         save_to_local_button.click()
                                         clicked_save = True
 
                                         modal = WebDriverWait(driver, 10).until(
-                                            EC.presence_of_element_located((By.XPATH, "//body/div[contains(@class, 'km-modal__wrapper save-resume')]/div[contains(@class, 'km-modal--open')]")))
+                                            EC.presence_of_element_located((By.XPATH,
+                                                                            "//body/div[contains(@class, 'km-modal__wrapper save-resume')]/div[contains(@class, 'km-modal--open')]")))
 
                                         try:
                                             footer = modal.find_element(By.XPATH, ".//div[@class='km-modal__footer']")
-                                            save_button = footer.find_element(By.XPATH, './/button[contains(@class, "km-button--primary")]')
+                                            save_button = footer.find_element(By.XPATH,
+                                                                              './/button[contains(@class, "km-button--primary")]')
                                             save_button.click()
                                             msg += f"\n-----==已下载{name}的简历！==-----"
                                             resume_num += 1
 
                                             WebDriverWait(driver, 10).until_not(
-                                                EC.presence_of_element_located((By.XPATH, "//body/div[contains(@class, 'km-modal__wrapper save-resume')]/div[contains(@class, 'km-modal--open')]")))
+                                                EC.presence_of_element_located((By.XPATH,
+                                                                                "//body/div[contains(@class, 'km-modal__wrapper save-resume')]/div[contains(@class, 'km-modal--open')]")))
                                         except:
                                             msg += f"\n模态框内找不到【保存】按钮"
 
                                     old_resume_number = resume_number
-                                    
+
                                     # 处理完成后点击下一份
                                     if not click_next_resume(driver, msg):
                                         break
@@ -509,21 +522,15 @@ def download_resume(driver, table_widget, selected_campuses=None):
                         except Exception as e:
                             print(f"处理岗位时出错 [{index}/{len(job_options)}]: {str(e)}")
                             continue
-                    
+
                     print(f"\n========== {campus}校区所有岗位处理完成，共处理{len(job_options)}个岗位 ==========\n")
                     df_temp = pd.DataFrame(resume_info_list)
                     df_temp.to_excel(f"temp_{campus}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx", index=False)
-                    
+
                 except Exception as e:
                     print(f"处理{campus}校区时出错: {e}")
                     continue
-            
+
 
     except Exception as e:
         print(f"出错: {e}")
-        
-                        
-
-
-
-       
