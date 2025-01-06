@@ -422,8 +422,6 @@ def download_resume(driver, table_widget, selected_campuses=None):
                             old_resume_number = ""
 
                             while True:
-                                clicked_save = False
-
                                 try:
                                     # 检查所有条件
                                     conditions_met, reason, phone_number = check_resume_conditions(driver, job_title)
@@ -488,33 +486,38 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                     append_row_to_excel(resume_info, temp_file_path)
 
                                     # 下载简历
-                                    if not clicked_save:
-                                        save_to_local_button = driver.find_element(By.XPATH,
-                                                                                   "//div[@class='resume-button position-r']")
-                                        save_to_local_button.click()
-                                        clicked_save = True
+                                    try:
+                                        # 使用更精确的选择器定位"存至本地"按钮
+                                        save_button = WebDriverWait(driver, 10).until(
+                                            EC.element_to_be_clickable((By.XPATH, 
+                                                "//div[contains(@class, 'new-resume-sidebar__actions-operate')]//div[contains(@class, 'resume-button')]//span[text()='存至本地']/parent::div/parent::div")))
+                                        save_button.click()
+                                        print("点击存至本地按钮")
 
+                                        # 等待模态框出现并点击确认
                                         modal = WebDriverWait(driver, 10).until(
-                                            EC.presence_of_element_located((By.XPATH,
-                                                                            "//body/div[contains(@class, 'km-modal__wrapper save-resume')]/div[contains(@class, 'km-modal--open')]")))
+                                            EC.presence_of_element_located((By.XPATH, 
+                                                "//body/div[contains(@class, 'km-modal__wrapper save-resume')]/div[contains(@class, 'km-modal--open')]")))
+                                        
+                                        footer = modal.find_element(By.XPATH, ".//div[@class='km-modal__footer']")
+                                        confirm_button = footer.find_element(By.XPATH, 
+                                            './/button[contains(@class, "km-button--primary")]')
+                                        confirm_button.click()
+                                        print(f"已点击确认下载{name}的简历")
+                                        msg += f"\n-----==已下载{name}的简历！==-----"
+                                        resume_num += 1
 
-                                        try:
-                                            footer = modal.find_element(By.XPATH, ".//div[@class='km-modal__footer']")
-                                            save_button = footer.find_element(By.XPATH,
-                                                                              './/button[contains(@class, "km-button--primary")]')
-                                            save_button.click()
-                                            msg += f"\n-----==已下载{name}的简历！==-----"
-                                            resume_num += 1
+                                        # 等待模态框消失
+                                        WebDriverWait(driver, 10).until_not(
+                                            EC.presence_of_element_located((By.XPATH, 
+                                                "//body/div[contains(@class, 'km-modal__wrapper save-resume')]/div[contains(@class, 'km-modal--open')]")))
+                                            
+                                    except Exception as e:
+                                        print(f"下载简历时出错: {e}")
+                                        msg += f"\n下载简历失败: {str(e)}"
 
-                                            WebDriverWait(driver, 10).until_not(
-                                                EC.presence_of_element_located((By.XPATH,
-                                                                                "//body/div[contains(@class, 'km-modal__wrapper save-resume')]/div[contains(@class, 'km-modal--open')]")))
-                                        except:
-                                            msg += f"\n模态框内找不到【保存】按钮"
-
+                                    # 更新简历编号并继续下一份
                                     old_resume_number = resume_number
-
-                                    # 处理完成后点击下一份
                                     if not click_next_resume(driver, msg):
                                         break
 

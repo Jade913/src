@@ -65,42 +65,67 @@ def export_pdata_from_table(table_widget):
 
 
 def import_single_resume_to_table(resume_info, table_widget):
-  """
-  将单条简历信息导入到 QTableWidget
-  :param resume_info: 字典类型的简历信息
-  :param table_widget: QTableWidget对象
-  :return: None
-  """
-  row_count = table_widget.rowCount()
-  table_widget.insertRow(row_count)
+    """
+    将单条简历信息导入到 QTableWidget
+    :param resume_info: 字典类型的简历信息
+    :param table_widget: QTableWidget对象
+    :return: None
+    """
+    row_count = table_widget.rowCount()
+    table_widget.insertRow(row_count)
 
-  for j, (key, value) in enumerate(resume_info.items()):
-    text = str(value) if value else ''
-    item = QTableWidgetItem(text)
-    table_widget.setItem(row_count, j, item)
+    for j, (key, value) in enumerate(resume_info.items()):
+        text = str(value) if value else ''
+        item = QTableWidgetItem(text)
+        table_widget.setItem(row_count, j, item)
 
 def init_excel_file(file_path):
-  """
-  初始化一个空的 Excel 文件，准备写入数据
-  :param file_path: Excel 文件路径
-  :return: None
-  """
-  df = pd.DataFrame(
-    columns=["序号", "意向课程", "手机", "校区", "姓名", "性别", "邮箱", "学历", "工作年限", "应聘职位", "居住地",
-             "在职情况", "简历编号", "来源"])
-  df.to_excel(file_path, index=False)
+    """
+    初始化一个空的 Excel 文件，准备写入数据
+    :param file_path: Excel 文件路径
+    :return: None
+    """
+    df = pd.DataFrame(
+        columns=["序号", "意向课程", "手机", "校区", "姓名", "性别", "邮箱", "学历", "工作年限", "应聘职位", "居住地",
+                "在职情况", "简历编号", "来源"])
+    df.to_excel(file_path, index=False)
 
 
 def append_row_to_excel(resume_info, file_path):
-  """
-  将一条简历信息追加到 Excel 文件
-  :param resume_info: 字典类型的简历信息
-  :param file_path: Excel 文件路径
-  :return: None
-  """
-  df = pd.DataFrame([resume_info])
-  with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-    df.to_excel(writer, index=False, header=False, startrow=writer.sheets['Sheet1'].max_row)
+    """
+    将一条简历信息追加到 Excel 文件
+    :param resume_info: 字典类型的简历信息
+    :param file_path: Excel 文件路径
+    :return: None
+    """
+    try:
+        # 确保文件存在
+        if not os.path.exists(file_path):
+            init_excel_file(file_path)
+            print(f"文件不存在，已重新初始化: {file_path}")
+            
+        df = pd.DataFrame([resume_info])
+        
+        # 使用 with 语句确保文件正确关闭
+        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+            # 获取当前最大行数
+            workbook = writer.book
+            worksheet = workbook['Sheet1']
+            max_row = worksheet.max_row
+            
+            # 追加数据
+            df.to_excel(
+                writer, 
+                index=False, 
+                header=False, 
+                startrow=max_row
+            )
+            
+        print(f"成功追加数据到: {file_path}")
+        
+    except Exception as e:
+        print(f"追加数据到Excel时出错: {str(e)}")
+        raise
 
 
 def import_pdata_to_table(pdata, table_widget):
