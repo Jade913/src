@@ -454,8 +454,11 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                                                     '.resume-basic-new__meta-item:nth-child(3)').text.strip()
                                     status = driver.find_element(By.CSS_SELECTOR,
                                                                  '.resume-basic-new__meta-item:nth-child(4)').text.strip()
-                                    email = driver.find_element(By.CSS_SELECTOR,
+                                    try:
+                                        email = driver.find_element(By.CSS_SELECTOR,
                                                                 '.resume-basic-new__email .is-ml-4').text
+                                    except:
+                                        email = ""
 
                                     # 处理数据
                                     work_years_match = re.search(r'\d+', work_years)
