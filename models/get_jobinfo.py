@@ -113,6 +113,14 @@ def check_resume_conditions(driver, job_title):
                 EC.presence_of_element_located((By.CLASS_NAME, 'resume-section-education-experiences')))
             education_items = education_section.find_elements(By.CLASS_NAME, 'new-education-experiences__item')
             is_rec = False
+            
+            # 首先检查是否明确标注非统招
+            for item in education_items:
+                item_text = item.text
+                if "非统招" in item_text:
+                    return False, "非统招", ""
+            
+            # 如果没有标注非统招，继续检查入学和毕业时间
             for item in education_items:
                 date_text = item.find_element(By.CLASS_NAME, 'new-education-experiences__item-time').text
                 if ' - ' in date_text:
@@ -122,10 +130,12 @@ def check_resume_conditions(driver, job_title):
                     if (end_year - start_year) >= 3 and start_month == 9 and (end_month == 6 or end_month == 7):
                         is_rec = True
                         break
+            
             if not is_rec:
                 return False, "非统招生", ""
-        except:
-            return False, "判断统招状态失败", ""
+                
+        except Exception as e:
+            return False, f"判断统招状态失败: {str(e)}", ""
 
         # 4.检查工作经历
         try:
