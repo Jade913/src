@@ -74,16 +74,20 @@ def check_resume_conditions(driver, job_title):
 
         # 2.检查电话号码
         try:
-            view_detail_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[.//div[contains(text(), '查看详情')]]")))
-            view_detail_btn.click()
+            try:
+                view_detail_btn = WebDriverWait(driver, 3).until(
+                    EC.element_to_be_clickable((By.XPATH, "//button[.//div[contains(text(), '查看详情')]]")))
+                view_detail_btn.click()
 
-            confirm_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, 
-                    "//div[contains(@class, 'get-phone-popover__content--btn')][contains(text(), '确定查看')]")))
-            confirm_btn.click()
+                confirm_btn = WebDriverWait(driver, 3).until(
+                    EC.element_to_be_clickable((By.XPATH,
+                        "//div[contains(@class, 'get-phone-popover__content--btn')][contains(text(), '确定查看')]")))
+                confirm_btn.click()
+            except:
+                print("没有查看详情按钮！")
 
-            phone_element = WebDriverWait(driver, 10).until(
+            time.sleep(0.5)
+            phone_element = WebDriverWait(driver, 1).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 
                     ".resume-basic-new__contacts--phone .is-ml-20 > div:last-child")))
             phone_number = ''.join(phone_element.text.strip().split())
@@ -215,7 +219,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
         if checkbox_container:
             # 查找复选框元素并点击
             checkbox = checkbox_container.find_element(By.XPATH, ".//div[@class='km-checkbox__icon']")
-            checkbox.click()
+            # checkbox.click()
 
 
     except Exception as e:
@@ -491,7 +495,7 @@ def download_resume(driver, table_widget, selected_campuses=None):
                                     # 下载简历
                                     try:
                                         # 使用更精确的选择器定位"存至本地"按钮
-                                        save_button = WebDriverWait(driver, 10).until(
+                                        save_button = WebDriverWait(driver, 5).until(
                                             EC.element_to_be_clickable((By.XPATH, 
                                                 "//div[contains(@class, 'new-resume-sidebar__actions-operate')]//div[contains(@class, 'resume-button')]//span[text()='存至本地']/parent::div/parent::div")))
                                         save_button.click()
